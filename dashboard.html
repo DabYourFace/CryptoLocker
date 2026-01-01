@@ -1,111 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>CryptoLocker Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CryptoLocker Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    #add-wallet-btn {
+      display: block;
+      margin: 0 auto 1rem auto;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      background: #3478f6;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    #error-container {
+      color: red;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    #wallet-container {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+    .wallet-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .wallet-card p {
+      margin: 0.3rem 0;
+      word-break: break-word;
+    }
+    .wallet-card button {
+      padding: 0.5rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .attest-btn {
+      background: #2f855a;
+      color: white;
+    }
+    .delete-btn {
+      background: #e53e3e;
+      color: white;
+    }
+  </style>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const SUPABASE_URL = 'https://mxofcfmkdovgyschmgop.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14b2ZjZm1rZG92Z3lzY2htZ29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxMjQ5NzMsImV4cCI6MjA4MjcwMDk3M30.LtsXpumBjrL-SsBZz5nKHk9Cw_4EL3EAmwujQhIyM4E';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const walletContainer = document.getElementById('wallet-container');
+    const addWalletBtn = document.getElementById('add-wallet-btn');
+    const errorContainer = document.getElementById('error-container');
+
+    function formatDate(ts) {
+      return new Date(ts).toLocaleString();
+    }
+
+    async function fetchBTCBalance(address) {
+      try {
+        const res = await fetch(`https://blockstream.info/api/address/${address}`);
+        if (!res.ok) throw new Error('Blockchain API error');
+        const data = await res.json();
+        const btc = (data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum) / 1e8;
+        return btc;
+      } catch {
+        return 'error';
+      }
+    }
+
+    async function fetchUSD(btc) {
+      try {
+        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+        if (!res.ok) throw new Error('CoinGecko error');
+        const data = await res.json();
+        return btc !== 'error' ? (btc * data.bitcoin.usd).toFixed(2) : 'error';
+      } catch {
+        return 'error';
+      }
+    }
+
+    async function loadWallets(user) {
+      walletContainer.innerHTML = '';
+      errorContainer.textContent = '';
+      try {
+        const { data: wallets, error } = await supabase
+          .from('wallets')
+          .select('*')
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+        if (!wallets?.length) {
+          walletContainer.innerHTML = '<p>No wallets added yet.</p>';
+          return;
+        }
+
+        for (const w of wallets) {
+          const btcBal = await fetchBTCBalance(w.address);
+          const usdBal = await fetchUSD(btcBal);
+
+          const card = document.createElement('div');
+          card.className = 'wallet-card';
+          card.innerHTML = `
+            <p><strong>Address:</strong> ${w.address}</p>
+            <p><strong>BTC:</strong> ${btcBal}</p>
+            <p><strong>USD:</strong> ${usdBal}</p>
+            <p><strong>Added:</strong> ${formatDate(w.added_at)}</p>
+            <button class="attest-btn">Attest Ownership</button>
+            <button class="delete-btn">Delete Wallet</button>
+          `;
+
+          card.querySelector('.attest-btn').addEventListener('click', async () => {
+            const { error } = await supabase
+              .from('user_logs')
+              .insert([{ user_id: user.id, action: `Attested wallet ${w.address}` }]);
+            if (error) alert('Attest failed: ' + error.message);
+            else loadWallets(user);
+          });
+
+          card.querySelector('.delete-btn').addEventListener('click', async () => {
+            if (!confirm(`Delete wallet ${w.address}?`)) return;
+            const { error } = await supabase
+              .from('wallets')
+              .delete()
+              .eq('id', w.id);
+            if (error) alert('Delete failed: ' + error.message);
+            else loadWallets(user);
+          });
+
+          walletContainer.appendChild(card);
+        }
+      } catch (err) {
+        errorContainer.textContent = 'Error loading wallets: ' + err.message;
+      }
+    }
+
+    async function checkAuth() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const user = session.user;
+      loadWallets(user);
+
+      addWalletBtn.addEventListener('click', async () => {
+        const address = prompt('Enter BTC wallet address:');
+        if (!address) return;
+        const { error } = await supabase
+          .from('wallets')
+          .insert([{ user_id: user.id, address, added_at: new Date().toISOString() }]);
+        if (error) alert('Failed to add wallet: ' + error.message);
+        else loadWallets(user);
+      });
+    }
+
+    checkAuth();
+  </script>
 </head>
 <body>
-
-<h1>Your Dashboard</h1>
-<div id="walletsGrid"></div>
-
-<!-- Supabase v2 CDN -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
-<script>
-// Supabase config
-const SUPABASE_URL = 'https://mxofcfmkdovgyschmgop.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14b2ZjZm1rZG92Z3lzY2htZ29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxMjQ5NzMsImV4cCI6MjA4MjcwMDk3M30.LtsXpumBjrL-SsBZz5nKHk9Cw_4EL3EAmwujQhIyM4E';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-async function loadWallets() {
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session) {
-    window.location.href = 'login.html';
-    return;
-  }
-
-  const user = session.user;
-  const grid = document.getElementById('walletsGrid');
-  grid.innerHTML = '';
-
-  const { data: wallets, error } = await supabase
-    .from('wallets')
-    .select('*')
-    .eq('user_id', user.id);
-
-  if (error) {
-    grid.innerHTML = `<div>Error loading wallets: ${error.message}</div>`;
-    return;
-  }
-
-  if (!wallets || wallets.length === 0) {
-    grid.innerHTML = `<div>No wallets added yet.</div>`;
-  }
-
-  for (const w of wallets) {
-    const card = document.createElement('div');
-    card.innerHTML = `
-      <div>Address: ${w.address}</div>
-      <div>BTC: loading… | USD: loading…</div>
-      <div>Added: ${new Date(w.added_at).toLocaleString()}</div>
-      <button class="attest">Attest Ownership</button>
-      <button class="delete">Delete Wallet</button>
-    `;
-    grid.appendChild(card);
-
-    // Attest button
-    card.querySelector('.attest').onclick = async () => {
-      await supabase.from('user_logs').insert([{
-        user_id: user.id,
-        action: `Attested wallet ${w.address} at ${new Date().toISOString()}`
-      }]);
-      alert(`Wallet ${w.address} attested.`);
-    };
-
-    // Delete button
-    card.querySelector('.delete').onclick = async () => {
-      if (!confirm(`Delete wallet ${w.address}?`)) return;
-      await supabase.from('wallets').delete().eq('id', w.id);
-      loadWallets();
-    };
-
-    // Fetch BTC & USD
-    (async () => {
-      try {
-        const resp = await fetch(`https://blockstream.info/api/address/${w.address}`);
-        const data = await resp.json();
-        const balanceBTC = (data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum) / 1e8;
-
-        const fiatResp = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd`);
-        const fiatData = await fiatResp.json();
-        const balanceUSD = (balanceBTC * fiatData.bitcoin.usd).toFixed(2);
-
-        card.querySelector('div:nth-child(2)').textContent = `BTC: ${balanceBTC} | USD: ${balanceUSD}`;
-      } catch {
-        card.querySelector('div:nth-child(2)').textContent = `BTC: error | USD: error`;
-      }
-    })();
-  }
-
-  // Add Wallet button
-  const add = document.createElement('div');
-  add.innerHTML = `<button id="addWalletBtn">Add Wallet</button>`;
-  grid.appendChild(add);
-
-  document.getElementById('addWalletBtn').onclick = async () => {
-    const addr = prompt('Enter BTC wallet address:');
-    if (!addr) return;
-    await supabase.from('wallets').insert([{ user_id: user.id, address: addr, added_at: new Date().toISOString() }]);
-    loadWallets();
-  };
-}
-
-// Load wallets on page load
-loadWallets();
-</script>
-
+  <h1>CryptoLocker Dashboard</h1>
+  <div id="error-container"></div>
+  <button id="add-wallet-btn">Add Wallet</button>
+  <div id="wallet-container"></div>
 </body>
 </html>
