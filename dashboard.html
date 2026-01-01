@@ -2,134 +2,156 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Dashboard | CryptoLocker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CryptoLocker Dashboard</title>
+<link rel="stylesheet" href="style.css">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-<style>
-body {
-  font-family: 'Inter', sans-serif;
-  background: #f2f2f7;
-  margin: 0;
-  padding: 0;
-  color: #1a202c;
-  overflow-x: hidden;
-}
-.dashboard-hero {
-  position: relative;
-  padding: 4rem 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 1;
-}
-h1 {
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 800;
-  color: #2b6cb0;
-  margin-bottom: 1rem;
-  text-align: center;
-}
-.bg-icons {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.06;
-}
-.bg-icons img {
-  position: absolute;
-  width: 70px; height: 70px;
-  animation: float 30s linear infinite;
-}
-.bg-icons img:nth-child(1) { top: 10%; left: 10%; animation-duration: 25s; }
-.bg-icons img:nth-child(2) { top: 60%; left: 75%; animation-duration: 35s; }
-.bg-icons img:nth-child(3) { top: 70%; left: 40%; animation-duration: 30s; }
-@keyframes float {
-  0% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(180deg); }
-  100% { transform: translateY(0) rotate(360deg); }
-}
-.bg-graph {
-  position: fixed;
-  top: 50px;
-  left: 0;
-  width: 100%;
-  height: 300px;
-  z-index: 0;
-  opacity: 0.04;
-  fill: none;
-  stroke: #2b6cb0;
-  stroke-width: 3;
-}
-#wallet-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 2rem;
-  width: 100%;
-  max-width: 1200px;
-  margin-top: 2rem;
-}
-.wallet-card {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  padding: 1.5rem 1.2rem;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.wallet-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-}
-.wallet-card p { margin: 0.4rem 0; font-weight: 500; word-break: break-word; font-size: 1rem; }
-.wallet-card strong { font-weight: 600; }
-.wallet-card button {
-  padding: 0.6rem 1rem;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: opacity 0.2s ease;
-}
-.wallet-card button:hover { opacity: 0.85; }
-.attest-btn { background-color: #38a169; color: white; }
-.delete-btn { background-color: #e53e3e; color: white; }
-#add-wallet-btn {
-  display: block;
-  margin: 0 auto;
-  padding: 0.8rem 2rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 12px;
-  background: linear-gradient(90deg, #2b6cb0, #3182ce);
-  color: white;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-#add-wallet-btn:hover { transform: scale(1.05); }
-</style>
 </head>
 <body>
+
+<!-- Background icons -->
 <div class="bg-icons">
   <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" />
   <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" />
   <img src="https://cryptologos.cc/logos/solana-sol-logo.png" />
 </div>
+
+<!-- Background graph -->
 <svg class="bg-graph" viewBox="0 0 1000 300" preserveAspectRatio="none">
   <polyline points="0,220 50,200 100,210 150,180 200,190 250,150 300,165 350,120 400,140 450,110 500,130 550,100 600,120 650,80 700,100 750,60 800,80 850,40 900,60 950,20 1000,40" />
 </svg>
 
-<div class="dashboard-hero">
-  <h1>CryptoLocker Dashboard</h1>
-  <button id="add-wallet-btn">Add Wallet</button>
-  <div id="wallet-container"></div>
-</div>
+<header>
+  <a href="index.html" class="logo">CryptoLocker</a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="docs.html">Docs</a>
+    <a href="security.html">Security</a>
+  </nav>
+  <div class="auth">
+    <a href="login.html" class="login">Login</a>
+    <a href="signup.html" class="signup">Sign Up</a>
+  </div>
+</header>
 
-<script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+<main>
+  <section class="hero">
+    <h1>Your Dashboard</h1>
+    <p>View all your wallets, track balances, and manage your crypto securely in one place.</p>
+  </section>
+
+  <section class="features">
+    <div class="tiers wallets-grid">
+      <!-- Wallet cards appended via JS -->
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>© 2025 CryptoLocker. No custody. No access. No bullshit.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
 const SUPABASE_URL = 'https://mxofcfmkdovgyschmgop.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInJlZiI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14b2ZjZm1rZG92Z3lzY2h
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14b2ZjZm1rZG92Z3lzY2htZ29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxMjQ5NzMsImV4cCI6MjA4MjcwMDk3M30.LtsXpumBjrL-SsBZz5nKHk9Cw_4EL3EAmwujQhIyM4E';
+const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function loadWallets() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session || !session.user) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  const user = session.user;
+
+  const { data: wallets, error } = await supabase
+    .from('wallets')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('added_at', { ascending: false });
+
+  const grid = document.querySelector('.wallets-grid');
+  grid.innerHTML = '';
+
+  if (error) {
+    grid.innerHTML = `<div class="tier">Error loading wallets: ${error.message}</div>`;
+    return;
+  }
+
+  if (!wallets || wallets.length === 0) {
+    grid.innerHTML = `<div class="tier">No wallets added yet.</div>`;
+  } else {
+    for (const wallet of wallets) {
+      const card = document.createElement('div');
+      card.className = 'tier';
+      card.innerHTML = `
+        <h3>${wallet.name || 'Wallet'}</h3>
+        <p><strong>Address:</strong> <span class="address">${wallet.address}</span></p>
+        <p><strong>BTC:</strong> <span class="btc-balance">Loading...</span></p>
+        <p><strong>USD:</strong> <span class="usd-balance">Loading...</span></p>
+        <p><strong>Added:</strong> ${new Date(wallet.added_at).toLocaleDateString()}</p>
+        <div style="margin-top: 15px;">
+          <button class="get-started attest-btn">Attest Ownership</button>
+          <button class="get-started delete-btn" style="background:#ff4d6d; margin-left:8px;">Delete</button>
+        </div>
+      `;
+      grid.appendChild(card);
+
+      // Fetch balances asynchronously
+      fetch(`https://blockstream.info/api/address/${wallet.address}`)
+        .then(res => res.json())
+        .then(data => {
+          const balanceBTC = (data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum) / 1e8;
+          card.querySelector('.btc-balance').textContent = balanceBTC.toFixed(8);
+          return fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+        })
+        .then(res => res.json())
+        .then(prices => {
+          const btc = parseFloat(card.querySelector('.btc-balance').textContent);
+          card.querySelector('.usd-balance').textContent = `$${(btc * prices.bitcoin.usd).toFixed(2)}`;
+        })
+        .catch(() => {
+          card.querySelector('.btc-balance').textContent = 'Error';
+          card.querySelector('.usd-balance').textContent = 'Error';
+        });
+
+      // Attest button
+      card.querySelector('.attest-btn').addEventListener('click', async () => {
+        await supabase.from('user_logs').insert([{
+          user_id: user.id,
+          action: `Attested wallet ${wallet.address} at ${new Date().toISOString()}`
+        }]);
+        alert('Wallet attested!');
+      });
+
+      // Delete button
+      card.querySelector('.delete-btn').addEventListener('click', async () => {
+        if (confirm('Are you sure you want to delete this wallet?')) {
+          await supabase.from('wallets').delete().eq('id', wallet.id);
+          loadWallets();
+        }
+      });
+    }
+  }
+
+  // Add Wallet card
+  const addCard = document.createElement('div');
+  addCard.className = 'tier';
+  addCard.innerHTML = `<button id="add-wallet" class="get-started">+ Add Wallet</button>`;
+  grid.appendChild(addCard);
+
+  document.getElementById('add-wallet').addEventListener('click', async () => {
+    const address = prompt('Enter BTC wallet address:');
+    if (!address) return;
+    await supabase.from('wallets').insert([{ user_id: user.id, address, added_at: new Date().toISOString() }]);
+    loadWallets();
+  });
+}
+
+loadWallets();
+</script>
+</body>
+</html>
