@@ -4,47 +4,19 @@
 <meta charset="UTF-8">
 <title>Dashboard | CryptoLocker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-<style>
-body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top, #0a0f1f, #02030a); color: #eaeaf0; margin:0; padding:0; overflow-x:hidden; }
-header { display:grid; grid-template-columns:auto 1fr auto; align-items:center; padding:20px 60px; position:relative; z-index:5;}
-.logo { font-family: 'Orbitron', sans-serif; font-size:28px; color:#4cc9ff; }
-nav a { margin:0 16px; text-decoration:none; color:#cfd3ff; font-weight:500; }
-nav a:hover { color:#fff; }
-.auth a { padding:8px 14px; border-radius:6px; background:#4cc9ff; color:#02030a; font-weight:600; text-decoration:none; margin-left:10px; }
-.auth a:hover { opacity:0.8; }
-
-.bg-icons img { position:absolute; width:220px; opacity:0.35; animation: drift 100s linear infinite; }
-.bg-icons img:nth-child(1){ top:15%; left:-10%; }
-.bg-icons img:nth-child(2){ top:50%; left:-20%; animation-duration:120s; }
-.bg-icons img:nth-child(3){ top:70%; left:-25%; animation-duration:140s; }
-@keyframes drift { from { transform: translateX(0); } to { transform: translateX(160vw); } }
-
-.bg-graph { position:absolute; top:100px; left:0; width:100%; height:300px; z-index:1; }
-.bg-graph polyline { fill:none; stroke:#ff4d6d; stroke-width:3; stroke-dasharray:2000; stroke-dashoffset:2000; animation: draw 4s ease-out forwards; }
-@keyframes draw { to { stroke-dashoffset:0; } }
-
-main { padding: 120px 60px 60px 60px; position:relative; z-index:2; }
-.wallets-grid { display:flex; flex-wrap:wrap; gap:20px; }
-.wallet-card { background: rgba(10,15,40,0.85); padding:20px; border-radius:14px; border:1px solid rgba(255,255,255,0.1); width: 320px; display:flex; flex-direction:column; }
-.wallet-address { word-break: break-all; font-family:'Orbitron', sans-serif; background: rgba(255,255,255,0.05); padding:6px; border-radius:6px; margin-bottom:8px; }
-.wallet-actions { margin-top:10px; display:flex; justify-content:space-between; }
-.wallet-actions button { padding:6px 10px; border-radius:6px; border:none; cursor:pointer; font-weight:600; background:#4cc9ff; color:#02030a; }
-.add-wallet-card { display:flex; align-items:center; justify-content:center; width:320px; background: rgba(10,15,40,0.85); border:1px dashed #4cc9ff; border-radius:14px; }
-.add-wallet-card button { padding:10px 20px; border-radius:6px; background:#4cc9ff; border:none; color:#02030a; font-weight:600; cursor:pointer; }
-
-.hero h1 { font-family:'Orbitron', sans-serif; margin-bottom:10px; color:#4cc9ff; }
-.hero p { font-size:14px; margin-bottom:30px; }
-</style>
 </head>
 <body>
 
+<!-- Background icons -->
 <div class="bg-icons">
   <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" />
   <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" />
   <img src="https://cryptologos.cc/logos/solana-sol-logo.png" />
 </div>
 
+<!-- Background graph -->
 <svg class="bg-graph" viewBox="0 0 1000 300" preserveAspectRatio="none">
   <polyline points="0,220 50,200 100,210 150,180 200,190 250,150 300,165 350,120 400,140 450,110 500,130 550,100 600,120 650,80 700,100 750,60 800,80 850,40 900,60 950,20 1000,40" />
 </svg>
@@ -66,12 +38,15 @@ main { padding: 120px 60px 60px 60px; position:relative; z-index:2; }
 <main>
   <section class="hero">
     <h1>Your Dashboard</h1>
-    <p>View all your wallets, track balances, attest ownership, and manage your crypto securely in one place.</p>
+    <p>View all your wallets, track balances, and manage your crypto securely in one place.</p>
   </section>
 
   <section class="features">
-    <div class="wallets-grid" id="walletList">
-      <!-- Wallet cards will be injected here -->
+    <div class="tiers wallets-grid">
+      <!-- Wallet cards get appended here via JS -->
+      <div class="tier add-wallet-card">
+        <button id="add-wallet">+ Add Wallet</button>
+      </div>
     </div>
   </section>
 </main>
@@ -86,115 +61,49 @@ const SUPABASE_URL = 'https://mxofcfmkdovgyschmgop.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14b2ZjZm1rZG92Z3lzY2htZ29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxMjQ5NzMsImV4cCI6MjA4MjcwMDk3M30.LtsXpumBjrL-SsBZz5nKHk9Cw_4EL3EAmwujQhIyM4E';
 const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let btcPrice = 0;
-const walletList = document.getElementById("walletList");
-
-async function fetchBtcPrice() {
-  try {
-    const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd");
-    const data = await res.json();
-    btcPrice = data.bitcoin.usd || 0;
-  } catch(e) { btcPrice = 0; console.error(e); }
-}
-
-async function checkUser() {
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) {
-    window.location.href = "login.html";
-    return null;
-  }
-  return data.user;
-}
-
-async function getBtcBalance(address) {
-  try {
-    const res = await fetch(`https://blockstream.info/api/address/${address}`);
-    const data = await res.json();
-    const balanceSats = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
-    return balanceSats / 1e8;
-  } catch(e) { console.error(e); return 0; }
-}
-
 async function loadWallets() {
-  await fetchBtcPrice();
-  const user = await checkUser();
-  if (!user) return;
-
-  const { data: wallets } = await supabase
-    .from("wallets")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("added_at", { ascending: false });
-
-  walletList.innerHTML = "";
-
-  if (!wallets || wallets.length === 0) {
-    walletList.innerHTML = `<div class="add-wallet-card"><button id="add-wallet">+ Add Wallet</button></div>`;
-    document.getElementById('add-wallet').onclick = addWalletPrompt;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    window.location.href = 'login.html';
     return;
   }
 
-  for (let w of wallets) {
-    const card = document.createElement("div");
-    card.className = "wallet-card";
+  const { data: wallets } = await supabase
+    .from('wallets')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('added_at', { ascending: false });
 
-    const addedDate = w.added_at ? new Date(w.added_at).toLocaleDateString() : "Unknown";
-    const btcBalance = await getBtcBalance(w.address);
-    const fiatBalance = (btcBalance * btcPrice).toFixed(2);
+  const grid = document.querySelector('.wallets-grid');
+  grid.innerHTML = '';
 
-    card.innerHTML = `
-      <div class="wallet-address">${w.address}</div>
-      <div class="balance-btc" style="color:red;">BTC: ${btcBalance}</div>
-      <div class="balance-fiat" style="color:green;">USD ≈ ${fiatBalance}</div>
-      <div>Added: ${addedDate}</div>
-    `;
-
-    const actions = document.createElement("div");
-    actions.className = "wallet-actions";
-
-    const attestBtn = document.createElement("button");
-    attestBtn.textContent = "Attest Ownership";
-    attestBtn.onclick = async () => {
-      await supabase.from("user_logs").insert([{ user_id: w.user_id, action: `Attested wallet ${w.address} at ${new Date().toISOString()}` }]);
-      alert(`Wallet ${w.address} attested!`);
-    };
-    actions.appendChild(attestBtn);
-
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "Delete Wallet";
-    deleteBtn.onclick = async () => {
-      if (!confirm("Delete this wallet?")) return;
-      await supabase.from("wallets").delete().eq("id", w.id);
-      loadWallets();
-    };
-    actions.appendChild(deleteBtn);
-
-    card.appendChild(actions);
-    walletList.appendChild(card);
+  if (!wallets || wallets.length === 0) {
+    grid.innerHTML = `<div class="tier">No wallets added yet.</div>`;
+  } else {
+    wallets.forEach(wallet => {
+      const card = document.createElement('div');
+      card.classList.add('tier');
+      card.innerHTML = `
+        <h3>${wallet.name}</h3>
+        <p><strong>Address:</strong> ${wallet.address}</p>
+        <p><strong>Balance:</strong> ${wallet.balance || '0'} ${wallet.chain}</p>
+        <p><strong>Added:</strong> ${new Date(wallet.added_at).toLocaleDateString()}</p>
+      `;
+      grid.appendChild(card);
+    });
   }
 
   const addCard = document.createElement('div');
-  addCard.className = "add-wallet-card";
+  addCard.classList.add('tier', 'add-wallet-card');
   addCard.innerHTML = `<button id="add-wallet">+ Add Wallet</button>`;
-  walletList.appendChild(addCard);
-  document.getElementById('add-wallet').onclick = addWalletPrompt;
-}
+  grid.appendChild(addCard);
 
-function addWalletPrompt() {
-  const address = prompt("Enter BTC wallet address:");
-  if (!address) return;
-  addWallet(address);
-}
-
-async function addWallet(address) {
-  const user = await checkUser();
-  if (!user) return;
-  await supabase.from("wallets").insert([{ user_id: user.id, address, added_at: new Date().toISOString() }]);
-  loadWallets();
+  document.getElementById('add-wallet').addEventListener('click', () => {
+    alert('Add wallet functionality goes here.');
+  });
 }
 
 loadWallets();
-setInterval(loadWallets, 5000);
 </script>
 </body>
 </html>
