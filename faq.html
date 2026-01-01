@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FAQ | CryptoLocker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+    background: radial-gradient(circle at top, #0a0f1f, #02030a);
+    color: #eaeaf0;
+    margin: 0;
+    padding: 0;
+  }
+
+  header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    padding: 20px 60px;
+  }
+
+  .logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 28px;
+    color: #4cc9ff;
+    text-decoration: none;
+  }
+
+  nav a {
+    margin: 0 16px;
+    text-decoration: none;
+    color: #cfd3ff;
+    font-weight: 500;
+  }
+
+  nav a:hover {
+    color: #fff;
+  }
+
+  .auth a {
+    padding: 8px 14px;
+    border-radius: 6px;
+    background: #4cc9ff;
+    color: #02030a;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .faq-section {
+    padding: 80px 20px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .faq-container {
+    max-width: 900px;
+    width: 100%;
+  }
+
+  .faq-box {
+    background: rgba(10,15,40,0.85);
+    padding: 50px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    color: #4cc9ff;
+    margin-bottom: 40px;
+  }
+
+  h2 {
+    color: #4cc9ff;
+    margin-top: 40px;
+    margin-bottom: 12px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px;
+  }
+
+  p {
+    line-height: 1.7;
+    font-size: 15px;
+    color: #d9dcff;
+  }
+
+  ul {
+    margin-top: 10px;
+    margin-left: 20px;
+  }
+
+  li {
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  footer {
+    text-align: center;
+    padding: 30px;
+    font-size: 14px;
+    color: #aab0ff;
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <a href="index.html" class="logo">CryptoLocker</a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="security.html">Security</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="docs.html">Docs</a>
+  </nav>
+  <div class="auth">
+    <a href="signup.html">Get Started</a>
+  </div>
+</header>
+
+<section class="faq-section">
+  <div class="faq-container">
+    <div class="faq-box">
+
+      <h1>Frequently Asked Questions</h1>
+
+      <h2>What is CryptoLocker?</h2>
+      <p>
+        CryptoLocker is a non-custodial digital asset isolation and attestation system.
+        We do not hold, manage, move, or access your assets. Instead, we provide
+        cryptographic proof, structural separation, and verifiable records that establish
+        ownership, control boundaries, and operational intent without custody.
+      </p>
+
+      <h2>Why does CryptoLocker exist?</h2>
+      <p>
+        Traditional custodial platforms expose users to counterparty risk, asset seizure,
+        mismanagement, insolvency, and legal ambiguity. CryptoLocker was designed to
+        eliminate these risks by ensuring assets remain fully under user control while
+        still providing provable structure, documentation, and separation for legal,
+        financial, and organizational purposes.
+      </p>
+
+      <h2>How does CryptoLocker work?</h2>
+      <p>
+        CryptoLocker operates through cryptographic attestation, wallet segregation,
+        and structured metadata. Users establish wallets or asset containers that are
+        logically isolated and documented without transferring custody.
+      </p>
+      <ul>
+        <li>No private keys are ever collected or stored</li>
+        <li>No transaction authority is granted to CryptoLocker</li>
+        <li>Assets remain on-chain under user-controlled wallets</li>
+        <li>Attestation records prove structure, not possession</li>
+      </ul>
+
+      <h2>What does “non-custodial” actually mean?</h2>
+      <p>
+        Non-custodial means CryptoLocker has zero technical ability to access, freeze,
+        move, or recover your assets. This aligns with established legal definitions used
+        in digital asset regulation, including guidance from FinCEN, SEC custody rules,
+        and international digital asset frameworks.
+      </p>
+
+      <h2>How does this provide legal protection?</h2>
+      <p>
+        CryptoLocker creates clear separation of ownership, control, and operational
+        responsibility. This separation helps reduce exposure to asset commingling,
+        third-party liability, and custodial classification.
+      </p>
+      <p>
+        By maintaining user-controlled custody and documented attestation, CryptoLocker
+        supports legal clarity in areas such as:
+      </p>
+      <ul>
+        <li>Asset ownership disputes</li>
+        <li>Operational segregation</li>
+        <li>Compliance documentation</li>
+        <li>Counterparty risk mitigation</li>
+      </ul>
+
+      <h2>Is CryptoLocker anonymous?</h2>
+      <p>
+        CryptoLocker supports both identified and anonymous usage models. Users may
+        choose identity-linked verification or fully anonymous wallet-based interaction,
+        depending on their jurisdiction, risk profile, and use case.
+      </p>
+
+      <h2>Does CryptoLocker comply with regulations?</h2>
+      <p>
+        CryptoLocker is designed to operate within existing legal frameworks by avoiding
+        custody, brokerage, or asset management roles. This architectural choice reduces
+        regulatory exposure while still enabling lawful use, documentation, and proof.
+      </p>
+
+      <h2>What happens if CryptoLocker disappears?</h2>
+      <p>
+        Nothing happens to your assets. They remain exactly where they are, under your
+        control, on-chain. CryptoLocker cannot lock, revoke, or interfere with access
+        because it never had access in the first place.
+      </p>
+
+      <h2>Who is CryptoLocker for?</h2>
+      <ul>
+        <li>Individuals seeking asset isolation without custody risk</li>
+        <li>Organizations needing verifiable asset segregation</li>
+        <li>Users concerned with sovereignty and control</li>
+        <li>Anyone tired of trusting third parties with irreversible assets</li>
+      </ul>
+
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>© 2025 CryptoLocker. No custody. No access. No bullshit.</p>
+</footer>
+
+</body>
+</html>

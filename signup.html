@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sign Up | CryptoLocker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top, #0a0f1f, #02030a); color: #eaeaf0; margin:0; padding:0; overflow-x:hidden;}
+  header { display:grid; grid-template-columns:auto 1fr auto; align-items:center; padding:20px 60px; position:relative; z-index:5;}
+  .logo { font-family: 'Orbitron', sans-serif; font-size:28px; color:#4cc9ff; }
+  nav a { margin:0 16px; text-decoration:none; color:#cfd3ff; font-weight:500; }
+  nav a:hover { color:#fff; }
+  .auth a { padding:8px 14px; border-radius:6px; background:#4cc9ff; color:#02030a; font-weight:600; text-decoration:none; }
+  .auth a:hover { opacity:0.8; }
+
+  .bg-icons img { position:absolute; width:220px; opacity:0.35; animation: drift 100s linear infinite; }
+  .bg-icons img:nth-child(1){ top:15%; left:-10%; }
+  .bg-icons img:nth-child(2){ top:50%; left:-20%; animation-duration:120s; }
+  .bg-icons img:nth-child(3){ top:70%; left:-25%; animation-duration:140s; }
+  @keyframes drift { from { transform: translateX(0); } to { transform: translateX(160vw); } }
+
+  .bg-graph { position:absolute; top:100px; left:0; width:100%; height:300px; z-index:1; }
+  .bg-graph polyline { fill:none; stroke:#ff4d6d; stroke-width:3; stroke-dasharray:2000; stroke-dashoffset:2000; animation: draw 4s ease-out forwards; }
+  @keyframes draw { to { stroke-dashoffset:0; } }
+
+  .signup-section { padding: 80px 20px; display:flex; justify-content:center; position:relative; z-index:2; }
+  .form-container { max-width:700px; width:100%; }
+  .form-box { background: rgba(10,15,40,0.85); padding:40px; border-radius:14px; border:1px solid rgba(255,255,255,0.1); }
+  h2 { font-family:'Orbitron', sans-serif; color:#4cc9ff; margin-bottom:24px; }
+  label { display:block; margin-top:16px; margin-bottom:6px; font-weight:500; }
+  input[type="text"], input[type="email"], input[type="password"], input[type="number"] { width:100%; padding:10px; border-radius:6px; border:1px solid #4cc9ff; background:#02030a; color:#eaeaf0; font-size:14px; }
+
+  .choice-container { display:flex; gap:20px; margin-top:20px; flex-wrap:wrap; }
+  .choice-box { flex:1; min-width:280px; padding:20px; border:2px solid #4cc9ff; border-radius:12px; cursor:pointer; text-align:center; transition: all 0.2s ease; background:rgba(10,15,40,0.85); }
+  .choice-box.selected { background:#4cc9ff; color:#02030a; }
+  .choice-box h3 { margin-bottom:10px; font-family:'Orbitron', sans-serif; }
+  .choice-box p { font-size:14px; }
+
+  .submit-section { margin-top:20px; text-align:center; }
+  .submit-section button { padding:10px 20px; border-radius:6px; background:#4cc9ff; border:none; color:#02030a; font-weight:600; cursor:pointer; margin-top:10px; }
+  .small-btn { background:transparent; color:#cfd3ff; border:none; font-size:12px; cursor:pointer; text-decoration:underline; display:block; margin:10px auto 0 auto; }
+
+  .human-check { display:flex; align-items:center; margin-top:20px; font-size:14px; }
+  .human-check input { margin-right:10px; }
+</style>
+</head>
+<body>
+
+<div class="bg-icons">
+  <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" />
+  <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" />
+  <img src="https://cryptologos.cc/logos/solana-sol-logo.png" />
+</div>
+
+<svg class="bg-graph" viewBox="0 0 1000 300" preserveAspectRatio="none">
+  <polyline points="0,220 50,200 100,210 150,180 200,190 250,150 300,165 350,120 400,140 450,110 500,130 550,100 600,120 650,80 700,100 750,60 800,80 850,40 900,60 950,20 1000,40" />
+</svg>
+
+<header>
+  <a href="index.html" class="logo">CryptoLocker</a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="security.html">Security</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="docs.html">Docs</a>
+  </nav>
+  <div class="auth">
+    <a href="login.html">Login</a>
+  </div>
+</header>
+
+<section class="signup-section">
+  <div class="form-container">
+    <div class="form-box">
+      <h2>Create Account</h2>
+      <form id="signup-form">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Your username" required>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@example.com" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter password" required>
+
+        <div class="choice-container">
+          <div class="choice-box" onclick="selectChoice(this)">
+            <h3>Full Identification Option</h3>
+            <p>Provide credit/debit info for full ID verification</p>
+            <input type="text" placeholder="Card Number">
+          </div>
+          <div class="choice-box" onclick="selectChoice(this)">
+            <h3>Full Anonymity Option</h3>
+            <p>Use crypto wallet and remain anonymous</p>
+            <input type="text" placeholder="Wallet Address">
+          </div>
+        </div>
+
+        <div class="human-check">
+          <input type="checkbox" id="human">
+          <label for="human">I'm human</label>
+        </div>
+
+        <div class="submit-section">
+          <button type="submit">Sign Up</button>
+          <button type="button" class="small-btn">Skip for now</button>
+        </div>
+        <pre id="output" style="color:#ff4d6d; margin-top:10px;"></pre>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>© 2025 CryptoLocker. No custody. No access. No bullshit.</p>
+</footer>
+
+<script>
+function selectChoice(el){
+  document.querySelectorAll('.choice-box').forEach(box=>box.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+const supabaseUrl = "https://mxofcfmkdovgyschmgop.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14b2ZjZm1rZG92Z3lzY2htZ29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxMjQ5NzMsImV4cCI6MjA4MjcwMDk3M30.LtsXpumBjrL-SsBZz5nKHk9Cw_4EL3EAmwujQhIyM4E";
+const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+const signupForm = document.getElementById("signup-form");
+const output = document.getElementById("output");
+
+signupForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const humanCheck = document.getElementById("human").checked;
+  if (!humanCheck) {
+    output.textContent = "Please confirm you are human.";
+    return;
+  }
+
+  const { data, error } = await client.auth.signUp({ email, password });
+  if (error) {
+    output.textContent = error.message;
+    return;
+  }
+
+  output.textContent = "Signup successful. Redirecting to login...";
+  setTimeout(() => window.location.href = "login.html", 1500);
+});
+</script>
+
+</body>
+</html>
