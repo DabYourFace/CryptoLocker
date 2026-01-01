@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <title>Dashboard | CryptoLocker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link rel="stylesheet" href="style.css">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
@@ -14,68 +12,27 @@ body {
   background: radial-gradient(circle at top, #0a0f1f, #02030a);
   color: #eaeaf0;
   margin: 0;
+  overflow-x: hidden;
 }
-
 header {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   padding: 20px 60px;
+  z-index: 5;
+  position: relative;
 }
-
-.logo {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 28px;
-  color: #4cc9ff;
-  text-decoration: none;
-}
-
-nav a {
-  margin: 0 16px;
-  color: #cfd3ff;
-  text-decoration: none;
-}
-
-main {
-  padding: 100px 40px 40px;
-}
-
-.wallets-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.tier {
-  background: rgba(10,15,40,0.85);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 14px;
-  padding: 20px;
-}
-
-.wallet-address {
-  font-family: monospace;
-  white-space: nowrap;
-  overflow-x: auto;
-}
-
-.balance-btc { color: #ff4d4d; font-weight: 600; }
-.balance-fiat { color: #4dff4d; font-weight: 600; }
-
-button {
-  margin-top: 10px;
-  padding: 10px 16px;
-  border-radius: 6px;
-  border: none;
-  background: #4cc9ff;
-  color: #02030a;
-  font-weight: 600;
-  cursor: pointer;
-}
+.logo { font-family: 'Orbitron', sans-serif; font-size: 28px; color: #4cc9ff; }
+nav a { margin:0 16px; color:#cfd3ff; text-decoration:none; }
+main { padding:100px 40px 40px; position: relative; z-index:2; }
+.wallets-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(360px,1fr)); gap:20px; margin-top:20px; }
+.tier { background: rgba(10,15,40,0.85); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:20px; }
+.wallet-address { font-family: monospace; white-space: nowrap; overflow-x:auto; }
+.balance-btc { color:#ff4d4d; font-weight:600; }
+.balance-fiat { color:#4dff4d; font-weight:600; }
+button { margin-top:10px; padding:10px 16px; border-radius:6px; border:none; background:#4cc9ff; color:#02030a; font-weight:600; cursor:pointer; }
 </style>
 </head>
-
 <body>
 
 <header>
@@ -92,43 +49,27 @@ button {
   <div id="walletsGrid" class="wallets-grid"></div>
 </main>
 
-<!-- Supabase v2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
 <script>
-/* =========================
-   SUPABASE CLIENT (ONCE)
-========================= */
 const SUPABASE_URL = 'https://mxofcfmkdovgyschmgop.supabase.co';
-const SUPABASE_KEY = 'YOUR_ANON_KEY_HERE';
+const SUPABASE_KEY = 'YOUR_ANON_KEY_HERE'; // use your real anon key
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const supabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-
-/* =========================
-   DASHBOARD LOGIC
-========================= */
 async function loadWallets() {
-  const { data, error } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = 'login.html'; return; }
+  const user = session.user;
 
-  if (error || !data?.user) {
-    window.location.href = 'login.html';
-    return;
-  }
-
-  const user = data.user;
   const grid = document.getElementById('walletsGrid');
   grid.innerHTML = '';
 
-  const { data: wallets, error: wErr } = await supabase
+  const { data: wallets, error } = await supabase
     .from('wallets')
     .select('*')
     .eq('user_id', user.id)
-    .order('created_at', { ascending: true });
+    .order('added_at', { ascending: false });
 
-  if (wErr) {
+  if (error) {
     grid.innerHTML = `<div class="tier">Error loading wallets</div>`;
     return;
   }
@@ -140,26 +81,21 @@ async function loadWallets() {
   for (const w of wallets) {
     const card = document.createElement('div');
     card.className = 'tier';
-
     card.innerHTML = `
       <div class="wallet-address">${w.address}</div>
       <div>
         <span class="balance-btc">BTC: loading…</span> |
         <span class="balance-fiat">USD: loading…</span>
       </div>
-      <div>Added: ${new Date(w.created_at).toLocaleString()}</div>
+      <div>Added: ${w.added_at ? new Date(w.added_at).toLocaleString() : 'Unknown'}</div>
       <button class="attest">Attest Ownership</button>
       <button class="delete">Delete Wallet</button>
     `;
-
     grid.appendChild(card);
 
     card.querySelector('.attest').onclick = async () => {
-      await supabase.from('user_logs').insert([{
-        user_id: user.id,
-        action: `Attested wallet ${w.address}`
-      }]);
-      alert('Wallet attested');
+      await supabase.from('user_logs').insert([{ user_id: user.id, action: `Attested wallet ${w.address}` }]);
+      alert('Attested');
     };
 
     card.querySelector('.delete').onclick = async () => {
@@ -168,40 +104,16 @@ async function loadWallets() {
       loadWallets();
     };
 
-    try {
-      const r = await fetch(`https://blockstream.info/api/address/${w.address}`);
-      const d = await r.json();
-      const btc = (d.chain_stats.funded_txo_sum - d.chain_stats.spent_txo_sum) / 1e8;
+    // Fetch BTC & fiat value
+    (async () => {
+      try {
+        const resp = await fetch(`https://blockstream.info/api/address/${w.address}`);
+        const data = await resp.json();
+        const btc = (data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum)/1e8;
 
-      const p = await fetch(
-        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd'
-      );
-      const price = await p.json();
-      const usd = (btc * price.bitcoin.usd).toFixed(2);
+        const fiatResp = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+        const fiatData = await fiatResp.json();
+        const usd = (btc * fiatData.bitcoin.usd).toFixed(2);
 
-      card.querySelector('.balance-btc').textContent = `BTC: ${btc}`;
-      card.querySelector('.balance-fiat').textContent = `USD: ${usd}`;
-    } catch {
-      card.querySelector('.balance-btc').textContent = `BTC: error`;
-      card.querySelector('.balance-fiat').textContent = `USD: error`;
-    }
-  }
-
-  const addCard = document.createElement('div');
-  addCard.className = 'tier';
-  addCard.innerHTML = `<button>Add Wallet</button>`;
-  addCard.querySelector('button').onclick = async () => {
-    const addr = prompt('Enter BTC address');
-    if (!addr) return;
-    await supabase.from('wallets').insert([{ user_id: user.id, address: addr }]);
-    loadWallets();
-  };
-
-  grid.appendChild(addCard);
-}
-
-loadWallets();
-</script>
-
-</body>
-</html>
+        card.querySelector('.balance-btc').textContent = `BTC: ${btc}`;
+        card.querySelector('.balance-fiat').textContent = `USD: ${usd}`;
