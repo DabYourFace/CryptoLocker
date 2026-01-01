@@ -7,8 +7,7 @@
 <link rel="stylesheet" href="style.css">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
-/* Basic styling */
-body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top, #0a0f1f, #02030a); color: #eaeaf0; margin:0; padding:0; }
+body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top, #0a0f1f, #02030a); color: #eaeaf0; margin:0; padding:0; overflow-x:hidden; }
 header { display:grid; grid-template-columns:auto 1fr auto; align-items:center; padding:20px 60px; position:relative; z-index:5; }
 .logo { font-family: 'Orbitron', sans-serif; font-size:28px; color:#4cc9ff; }
 nav a { margin:0 16px; text-decoration:none; color:#cfd3ff; font-weight:500; }
@@ -26,17 +25,13 @@ nav a:hover { color:#fff; }
 .bg-graph polyline { fill:none; stroke:#ff4d6d; stroke-width:3; stroke-dasharray:2000; stroke-dashoffset:2000; animation: draw 4s ease-out forwards; }
 @keyframes draw { to { stroke-dashoffset:0; } }
 
-main { padding:120px 60px 60px 60px; position:relative; z-index:2; }
-.wallets-grid { display:flex; flex-wrap:wrap; gap:20px; }
-.tier { background: rgba(10,15,40,0.85); padding:20px; border-radius:14px; border:1px solid rgba(255,255,255,0.1); flex:1 1 300px; min-width:300px; word-break: break-all; }
-.tier h3 { margin-bottom:10px; font-family:'Orbitron', sans-serif; color:#4cc9ff; }
-.tier p { margin:6px 0; }
-.wallet-address { font-size:14px; width:100%; overflow-x:auto; display:block; }
-.balance-btc { color:#ff4d6d; font-weight:600; }
-.balance-fiat { color:#4ccf33; font-weight:600; }
-button { padding:8px 14px; border-radius:6px; background:#4cc9ff; border:none; color:#02030a; font-weight:600; cursor:pointer; margin-top:6px; }
-button:hover { opacity:0.85; }
-.add-wallet-card button { font-size:16px; font-weight:700; }
+main { padding: 100px 40px 40px 40px; position:relative; z-index:2; }
+.wallets-grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(320px,1fr)); gap:20px; margin-top:20px; }
+.tier { background: rgba(10,15,40,0.85); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:20px; word-break: break-word; }
+.wallet-address { width:100%; font-family: monospace; color:#eaeaf0; overflow-x:auto; }
+.balance-btc { color: #ff4d4d; font-weight:600; }
+.balance-fiat { color: #4dff4d; font-weight:600; }
+button { padding:10px 16px; border:none; border-radius:6px; background:#4cc9ff; color:#02030a; font-weight:600; cursor:pointer; margin-top:10px; }
 </style>
 </head>
 <body>
@@ -67,8 +62,8 @@ button:hover { opacity:0.85; }
 
 <main>
   <h1>Your Dashboard</h1>
-  <div class="wallets-grid" id="wallets-grid">
-    <!-- Wallet cards appended here -->
+  <div class="wallets-grid" id="walletsGrid">
+    <!-- Wallet cards added via JS -->
   </div>
 </main>
 
@@ -76,96 +71,89 @@ button:hover { opacity:0.85; }
   <p>© 2025 CryptoLocker. No custody. No access. No bullshit.</p>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = 'https://mxofcfmkdovgyschmgop.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14b2ZjZm1rZG92Z3lzY2htZ29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxMjQ5NzMsImV4cCI6MjA4MjcwMDk3M30.LtsXpumBjrL-SsBZz5nKHk9Cw_4EL3EAmwujQhIyM4E';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseUrl = 'https://mxofcfmkdovgyschmgop.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14b2ZjZm1rZG92Z3lzY2htZ29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxMjQ5NzMsImV4cCI6MjA4MjcwMDk3M30.LtsXpumBjrL-SsBZz5nKHk9Cw_4EL3EAmwujQhIyM4E';
+const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
 
 async function loadWallets() {
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError || !session) {
-    window.location.href = 'login.html';
+  if (sessionError || !session) { window.location.href = 'login.html'; return; }
+  const user = session.user;
+
+  const { data: wallets, error } = await supabase.from('wallets').select('*').eq('user_id', user.id);
+  const grid = document.getElementById('walletsGrid');
+  grid.innerHTML = '';
+
+  if (error) {
+    grid.innerHTML = `<div class="tier">Error loading wallets: ${error.message}</div>`;
     return;
   }
-  const user = session.user;
-  const { data: wallets, error } = await supabase.from('wallets').select('*').eq('user_id', user.id);
-
-  const grid = document.getElementById('wallets-grid');
-  grid.innerHTML = '';
 
   if (!wallets || wallets.length === 0) {
     grid.innerHTML = `<div class="tier">No wallets added yet.</div>`;
-  } else {
-    const fiat = 'usd'; // you could add a select later
+  }
 
-    for (const w of wallets) {
-      const card = document.createElement('div');
-      card.classList.add('tier');
-      card.innerHTML = `
-        <h3>${w.address}</h3>
-        <p class="wallet-address">${w.address}</p>
-        <p class="balance-btc">BTC: Loading...</p>
-        <p class="balance-fiat">USD: Loading...</p>
-        <p>Added: ${w.added_at ? new Date(w.added_at).toLocaleString() : 'N/A'}</p>
-        <button class="attest-btn">Attest Ownership</button>
-        <button class="delete-btn">Delete Wallet</button>
-      `;
-      grid.appendChild(card);
+  const fiat = 'usd'; // You can add a fiat selector if needed
 
-      const btcEl = card.querySelector('.balance-btc');
-      const fiatEl = card.querySelector('.balance-fiat');
+  for (const w of wallets) {
+    const card = document.createElement('div');
+    card.className = 'tier';
+    card.innerHTML = `
+      <div class="wallet-address">${w.address}</div>
+      <div><span class="balance-btc">BTC: Loading...</span> | <span class="balance-fiat">USD: Loading...</span></div>
+      <div>Added: ${new Date(w.added_at).toLocaleString()}</div>
+      <button class="attest-btn">Attest Ownership</button>
+      <button class="delete-btn">Delete Wallet</button>
+    `;
+    grid.appendChild(card);
 
-      fetch(`https://blockstream.info/api/address/${w.address}`)
-        .then(r => r.json())
-        .then(data => {
-          const balanceSats = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
-          const balanceBTC = balanceSats / 1e8;
-          btcEl.textContent = `BTC: ${balanceBTC}`;
+    // Attest
+    card.querySelector('.attest-btn').onclick = async () => {
+      await supabase.from('user_logs').insert([{ user_id: user.id, action: `Attested wallet ${w.address} at ${new Date().toISOString()}` }]);
+      alert(`Wallet ${w.address} attested.`);
+    };
 
-          return fetch(`https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=${fiat}`);
-        })
-        .then(r => r.json())
-        .then(data => {
-          const balanceBTC = parseFloat(btcEl.textContent.split(': ')[1]);
-          const balanceFiat = (balanceBTC * data.bitcoin[fiat]).toFixed(2);
-          fiatEl.textContent = `USD: ${balanceFiat}`;
-        })
-        .catch(e => {
-          btcEl.textContent = 'BTC: Error';
-          fiatEl.textContent = 'USD: Error';
-          console.error(e);
-        });
+    // Delete
+    card.querySelector('.delete-btn').onclick = async () => {
+      if (!confirm(`Delete wallet ${w.address}?`)) return;
+      await supabase.from('wallets').delete().eq('id', w.id);
+      loadWallets();
+    };
 
-      card.querySelector('.attest-btn').addEventListener('click', async () => {
-        const timestamp = new Date().toISOString();
-        await supabase.from('user_logs').insert([{ user_id: user.id, action: `Attested wallet ${w.address} at ${timestamp}` }]);
-        alert(`Wallet ${w.address} attested at ${timestamp}`);
-      });
-
-      card.querySelector('.delete-btn').addEventListener('click', async () => {
-        if (!confirm(`Delete wallet ${w.address}?`)) return;
-        const { error } = await supabase.from('wallets').delete().eq('id', w.id);
-        if (error) return alert('Error deleting wallet: ' + error.message);
-        loadWallets();
-      });
-    }
+    // Fetch BTC and fiat
+    (async () => {
+      try {
+        const resp = await fetch(`https://blockstream.info/api/address/${w.address}`);
+        const data = await resp.json();
+        const balanceSats = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
+        const balanceBTC = balanceSats / 1e8;
+        const fiatResp = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=${fiat}`);
+        const fiatData = await fiatResp.json();
+        const balanceFiat = (balanceBTC * fiatData.bitcoin[fiat]).toFixed(2);
+        card.querySelector('.balance-btc').textContent = `BTC: ${balanceBTC}`;
+        card.querySelector('.balance-fiat').textContent = `USD: ${balanceFiat}`;
+      } catch (err) {
+        console.error(err);
+        card.querySelector('.balance-btc').textContent = `BTC: Error`;
+        card.querySelector('.balance-fiat').textContent = `USD: Error`;
+      }
+    })();
   }
 
   // Add Wallet button
   const addCard = document.createElement('div');
-  addCard.classList.add('tier', 'add-wallet-card');
-  addCard.innerHTML = `<button id="add-wallet">+ Add Wallet</button>`;
+  addCard.className = 'tier';
+  addCard.innerHTML = `<button id="add-wallet-btn">+ Add Wallet</button>`;
   grid.appendChild(addCard);
-  document.getElementById('add-wallet').addEventListener('click', () => {
-    const walletAddress = prompt('Enter BTC wallet address:');
+
+  document.getElementById('add-wallet-btn').onclick = () => {
+    const walletAddress = prompt('Enter new BTC wallet address:');
     if (!walletAddress) return;
     supabase.from('wallets').insert([{ user_id: user.id, address: walletAddress, added_at: new Date().toISOString() }])
-      .then(res => {
-        if (res.error) return alert('Error adding wallet: ' + res.error.message);
-        loadWallets();
-      });
-  });
+      .then(() => loadWallets());
+  };
 }
 
 loadWallets();
