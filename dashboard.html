@@ -14,7 +14,6 @@ body {
   background: radial-gradient(circle at top, #0a0f1f, #02030a);
   color: #eaeaf0;
   margin: 0;
-  overflow-x: hidden;
 }
 
 header {
@@ -22,14 +21,13 @@ header {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   padding: 20px 60px;
-  z-index: 5;
-  position: relative;
 }
 
 .logo {
   font-family: 'Orbitron', sans-serif;
   font-size: 28px;
   color: #4cc9ff;
+  text-decoration: none;
 }
 
 nav a {
@@ -40,8 +38,6 @@ nav a {
 
 main {
   padding: 100px 40px 40px;
-  position: relative;
-  z-index: 2;
 }
 
 .wallets-grid {
@@ -100,32 +96,39 @@ button {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <script>
+/* =========================
+   SUPABASE CLIENT (ONCE)
+========================= */
 const SUPABASE_URL = 'https://mxofcfmkdovgyschmgop.supabase.co';
-const SUPABASE_KEY = 'YOUR_ANON_KEY_HERE'; // keep yours, shortened here
+const SUPABASE_KEY = 'YOUR_ANON_KEY_HERE';
 
 const supabase = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
 
+/* =========================
+   DASHBOARD LOGIC
+========================= */
 async function loadWallets() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data, error } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (error || !data?.user) {
     window.location.href = 'login.html';
     return;
   }
 
-  const user = session.user;
+  const user = data.user;
   const grid = document.getElementById('walletsGrid');
   grid.innerHTML = '';
 
-  const { data: wallets, error } = await supabase
+  const { data: wallets, error: wErr } = await supabase
     .from('wallets')
     .select('*')
-    .eq('user_id', user.id);
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: true });
 
-  if (error) {
+  if (wErr) {
     grid.innerHTML = `<div class="tier">Error loading wallets</div>`;
     return;
   }
@@ -144,7 +147,7 @@ async function loadWallets() {
         <span class="balance-btc">BTC: loading…</span> |
         <span class="balance-fiat">USD: loading…</span>
       </div>
-      <div>Added: ${new Date(w.added_at).toLocaleString()}</div>
+      <div>Added: ${new Date(w.created_at).toLocaleString()}</div>
       <button class="attest">Attest Ownership</button>
       <button class="delete">Delete Wallet</button>
     `;
@@ -156,7 +159,7 @@ async function loadWallets() {
         user_id: user.id,
         action: `Attested wallet ${w.address}`
       }]);
-      alert('Attested');
+      alert('Wallet attested');
     };
 
     card.querySelector('.delete').onclick = async () => {
@@ -170,7 +173,9 @@ async function loadWallets() {
       const d = await r.json();
       const btc = (d.chain_stats.funded_txo_sum - d.chain_stats.spent_txo_sum) / 1e8;
 
-      const p = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+      const p = await fetch(
+        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd'
+      );
       const price = await p.json();
       const usd = (btc * price.bitcoin.usd).toFixed(2);
 
@@ -182,20 +187,21 @@ async function loadWallets() {
     }
   }
 
-  const add = document.createElement('div');
-  add.className = 'tier';
-  add.innerHTML = `<button>Add Wallet</button>`;
-  add.querySelector('button').onclick = async () => {
-    const addr = prompt('BTC address');
+  const addCard = document.createElement('div');
+  addCard.className = 'tier';
+  addCard.innerHTML = `<button>Add Wallet</button>`;
+  addCard.querySelector('button').onclick = async () => {
+    const addr = prompt('Enter BTC address');
     if (!addr) return;
     await supabase.from('wallets').insert([{ user_id: user.id, address: addr }]);
     loadWallets();
   };
 
-  grid.appendChild(add);
+  grid.appendChild(addCard);
 }
 
 loadWallets();
 </script>
+
 </body>
 </html>
