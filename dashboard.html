@@ -99,7 +99,26 @@
       margin-bottom: 1rem;
       z-index: 1;
       position: relative;
-    }
+    }const fiatSelector = document.getElementById('fiat-selector');
+let selectedFiat = 'usd';
+
+fiatSelector.addEventListener('change', () => {
+  selectedFiat = fiatSelector.value;
+});
+
+}
+<select id="fiat-selector" style="
+  margin-bottom: 1.5rem;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #cbd5e0;
+  font-weight: 600;
+">
+  <option value="usd">USD</option>
+  <option value="eur">EUR</option>
+  <option value="gbp">GBP</option>
+</select>
+}
 
     #add-wallet-btn {
       display: block;
