@@ -15,6 +15,15 @@
       color: #1a202c;
       overflow-x: hidden;
     }
+.crypto-balance {
+  color: #c53030; /* red */
+  font-weight: 600;
+}
+
+.fiat-balance {
+  color: #2f855a; /* green */
+  font-weight: 600;
+}
 
     /* Hero-style dashboard wrapper */
     .dashboard-hero {
@@ -239,8 +248,8 @@
           card.className = 'wallet-card';
           card.innerHTML = `
             <p><strong>Address:</strong> ${w.address}</p>
-            <p><strong>BTC:</strong> ${btcBal}</p>
-            <p><strong>USD:</strong> ${usdBal}</p>
+            <p><strong>BTC:</strong> <span class="crypto-balance">${btcBal}</span></p>
+            <p><strong>USD:</strong> <span class="fiat-balance">${usdBal}</span></p>
             <p><strong>Added:</strong> ${formatDate(w.added_at)}</p>
             <button class="attest-btn">Attest Ownership</button>
             <button class="delete-btn">Delete Wallet</button>
